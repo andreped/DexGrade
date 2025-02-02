@@ -1,0 +1,41 @@
+name: Build APK
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.1'
+     
+      - name: Configure build
+        run: flutter clean && flutter pub get
+      
+      - name: Build APK
+        env:
+          KEY_JKS: ${{ secrets.KEY_JKS }}
+          KEY_PASSWORD: ${{ secrets.ALIAS_PASSWORD }}
+          ALIAS_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: base64 -d <<< $KEY_JKS > ./android/app/release-key.jks && flutter build apk --release -v
+
+      - name: Rename APK
+        run: mv ./build/app/outputs/flutter-apk/app-release.apk DexGrade.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DexGrade
+          path: DexGrade.apk
+          if-no-files-found: error
