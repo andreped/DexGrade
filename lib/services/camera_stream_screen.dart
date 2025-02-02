@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'tflite_service.dart';
+import 'dart:async';
 
 class CameraStreamScreen extends StatefulWidget {
   @override
@@ -14,12 +15,16 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
   List<Map<String, dynamic>>? _results;
   final TFLiteHelper _tfliteHelper = TFLiteHelper();
   bool _cameraAvailable = true;
+  int _frames = 0;
+  double _fps = 0.0;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _requestPermissions();
     _tfliteHelper.loadModel();
+    _startFPSTimer();
   }
 
   Future<void> _requestPermissions() async {
@@ -47,6 +52,7 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
           _isDetecting = true;
           _runModelOnFrame(image);
         }
+        _frames++;
       });
 
       setState(() {});
@@ -58,17 +64,30 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
   }
 
   Future<void> _runModelOnFrame(CameraImage image) async {
-    var results = await _tfliteHelper.classifyImageFromCamera(image);
-    setState(() {
-      _results = results;
+    // Run inference in a separate Future
+    Future(() async {
+      var results = await _tfliteHelper.classifyImageFromCamera(image);
+      setState(() {
+        _results = results;
+      });
+      _isDetecting = false;
     });
-    _isDetecting = false;
+  }
+
+  void _startFPSTimer() {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        _fps = _frames.toDouble();
+        _frames = 0;
+      });
+    });
   }
 
   @override
   void dispose() {
     _cameraController?.dispose();
     _tfliteHelper.disposeModel();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -94,6 +113,18 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
                               child: _buildRecognitionList(),
                             ),
                           ),
+                    Positioned(
+                      top: 16,
+                      right: 16,
+                      child: Container(
+                        padding: EdgeInsets.all(8),
+                        color: Colors.black54,
+                        child: Text(
+                          'FPS: ${_fps.toStringAsFixed(1)}',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ),
+                    ),
                   ],
                 ))
           : Center(
