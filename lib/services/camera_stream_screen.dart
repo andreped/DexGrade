@@ -58,11 +58,14 @@ class _CameraStreamScreenState extends State<CameraStreamScreen> {
   }
 
   Future<void> _runModelOnFrame(CameraImage image) async {
-    var results = await _tfliteHelper.classifyImageFromCamera(image);
-    setState(() {
-      _results = results;
+    // Run inference in a separate Future
+    Future(() async {
+      var results = await _tfliteHelper.classifyImageFromCamera(image);
+      setState(() {
+        _results = results;
+      });
+      _isDetecting = false;
     });
-    _isDetecting = false;
   }
 
   @override

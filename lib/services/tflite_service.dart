@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:tflite_flutter/src/delegates/gpu_delegate.dart';
 import 'package:camera/camera.dart';
 
 class TFLiteHelper {
@@ -11,8 +12,30 @@ class TFLiteHelper {
   late List<int> _inputShape;
   late List<int> _outputShape;
 
-  Future<void> loadModel() async {
-    _interpreter = await Interpreter.fromAsset('assets/models/model.tflite');
+  Future<void> loadModel({bool useGpuDelegate = false}) async {
+    var interpreterOptions = InterpreterOptions();
+
+    if (useGpuDelegate) {
+      try {
+        var gpuDelegateV2 = GpuDelegateV2(
+          options: GpuDelegateOptionsV2(
+            isPrecisionLossAllowed: false,
+            inferencePreference: 1, // TfLiteGpuInferenceUsage.fastSingleAnswer
+            inferencePriority1: 1, // TfLiteGpuInferencePriority.minLatency
+            inferencePriority2: 2, // TfLiteGpuInferencePriority.auto
+            inferencePriority3: 2, // TfLiteGpuInferencePriority.auto
+          ),
+        );
+        interpreterOptions.addDelegate(gpuDelegateV2);
+      } catch (e) {
+        print('Failed to create GPU delegate: $e');
+      }
+    }
+
+    _interpreter = await Interpreter.fromAsset(
+      'assets/models/model_streamer.tflite',
+      options: interpreterOptions,
+    );
     _labels = await _loadLabels('assets/models/labels.txt');
 
     _inputShape = _interpreter.getInputTensor(0).shape;

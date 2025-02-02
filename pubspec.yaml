@@ -63,5 +63,5 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/models/model.tflite
+    - assets/models/model_streamer.tflite
     - assets/models/labels.txt
