@@ -4,6 +4,8 @@ PODS:
   - Flutter (1.0.0)
   - image_picker_ios (0.0.1):
     - Flutter
+  - permission_handler_apple (9.1.1):
+    - Flutter
   - TensorFlowLiteC (2.12.0):
     - TensorFlowLiteC/Core (= 2.12.0)
   - TensorFlowLiteC/Core (2.12.0)
@@ -31,6 +33,7 @@ DEPENDENCIES:
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - Flutter (from `Flutter`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - tflite_flutter (from `.symlinks/plugins/tflite_flutter/ios`)
 
 SPEC REPOS:
@@ -45,6 +48,8 @@ EXTERNAL SOURCES:
     :path: Flutter
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
   tflite_flutter:
     :path: ".symlinks/plugins/tflite_flutter/ios"
 
@@ -52,6 +57,7 @@ SPEC CHECKSUMS:
   camera_avfoundation: dd002b0330f4981e1bbcb46ae9b62829237459a4
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
+  permission_handler_apple: e76247795d700c14ea09e3a2d8855d41ee80a2e6
   TensorFlowLiteC: 20785a69299185a379ba9852b6625f00afd7984a
   TensorFlowLiteSwift: 3a4928286e9e35bdd3e17970f48e53c80d25e793
   tflite_flutter: 9433d086a3060431bbc9f3c7c20d017db0e72d08
