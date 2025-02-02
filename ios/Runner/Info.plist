@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>We need camera access to take pictures of Pokémon cards.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need photo library access to save pictures of Pokémon cards.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need photo library access to save pictures of Pokémon cards.</string>
 </dict>
 </plist>
