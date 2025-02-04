@@ -1,25 +1,14 @@
 import os
 import time
-import random
-import pandas as pd
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import requests
 
-# Headers to mimic a real browser (used in requests for product pages)
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    "Accept-Language": "en-US,en;q=0.9",
-}
+from .parse import extract_image_url, sanitize_filename
+from .io import download_image
 
-# Folder to store all product images
-BASE_IMAGE_FOLDER = "ebay_pokemon_psa"
-os.makedirs(BASE_IMAGE_FOLDER, exist_ok=True)
 
-# eBay Category URL for Pokémon PSA Individual Cards
-CATEGORY_URL = "https://www.ebay.com/b/Pokemon-TCG-Professional-Sports-Authenticator-PSA-Individual-Trading-Card-Games/183454/bn_55173600?_pgn={}"
-
-def get_product_urls_with_playwright(max_pages=2):
+def get_product_urls_with_playwright(max_pages:int, category_url: str):
     """
     Uses Playwright to scrape product URLs from dynamically loaded eBay category pages.
     """
@@ -29,7 +18,7 @@ def get_product_urls_with_playwright(max_pages=2):
         page = browser.new_page()
 
         for page_num in range(1, max_pages + 1):
-            url = CATEGORY_URL.format(page_num)
+            url = category_url.format(page_num)
             print(f"Scraping category page {page_num}: {url}")
             page.goto(url)
             time.sleep(5)  # Wait for JavaScript to load
@@ -51,48 +40,12 @@ def get_product_urls_with_playwright(max_pages=2):
     print(f"Total URLs extracted: {len(product_urls)}")
     return product_urls
 
-def sanitize_filename(filename):
-    """Removes invalid characters from filenames."""
-    return "".join(c for c in filename if c.isalnum() or c in " -_").strip()
 
-def download_image(image_url, folder, index):
-    """Downloads an image and saves it in the specified folder."""
-    if not image_url:
-        return None
-
-    try:
-        response = requests.get(image_url, headers=HEADERS, stream=True)
-        if response.status_code == 200:
-            filename = f"{index}.jpg"
-            filepath = os.path.join(folder, filename)
-            with open(filepath, "wb") as file:
-                for chunk in response.iter_content(1024):
-                    file.write(chunk)
-            return filename
-        else:
-            print(f"Failed to download image: {image_url} (Status: {response.status_code})")
-    except Exception as e:
-        print(f"Error downloading {image_url}: {e}")
-    
-    return None
-
-def extract_image_url(img_tag):
-    """Extracts the best image URL from an <img> tag inside the gallery."""
-    if "data-zoom-src" in img_tag.attrs:
-        return img_tag["data-zoom-src"]
-    elif "data-originalsrc" in img_tag.attrs:  # Extracting images from category page
-        return img_tag["data-originalsrc"]
-    elif "srcset" in img_tag.attrs:
-        return img_tag["srcset"].split(",")[-1].split(" ")[0]
-    elif "src" in img_tag.attrs:
-        return img_tag["src"]
-    return None
-
-def scrape_ebay_product(url):
+def scrape_ebay_product(url, headers, base_image_folder):
     """Scrapes an eBay product page for its name, condition, price, and all images."""
     print(f"Scraping product: {url}")
     
-    response = requests.get(url, headers=HEADERS)
+    response = requests.get(url)
     if response.status_code != 200:
         print(f"Failed to fetch page (Status: {response.status_code})")
         return None
@@ -112,7 +65,7 @@ def scrape_ebay_product(url):
     condition = condition_element.text.strip() if condition_element else "N/A"
 
     # Create a dedicated folder for the product
-    product_folder = os.path.join(BASE_IMAGE_FOLDER, sanitize_filename(title))
+    product_folder = os.path.join(base_image_folder, sanitize_filename(title))
     os.makedirs(product_folder, exist_ok=True)
 
     # Restrict image scraping to the main image carousel
@@ -131,7 +84,7 @@ def scrape_ebay_product(url):
     # Download images
     downloaded_images = []
     for index, image_url in enumerate(image_urls):
-        filename = download_image(image_url, product_folder, index)
+        filename = download_image(image_url, product_folder, index, headers)
         if filename:
             downloaded_images.append(filename)
 
@@ -143,20 +96,3 @@ def scrape_ebay_product(url):
         "Image Count": len(downloaded_images),
         "Image Folder": product_folder,
     }
-
-# Step 1: Get product URLs from category page using Playwright
-product_urls = get_product_urls_with_playwright(max_pages=2)
-
-# Step 2: Scrape each product page
-results = []
-for product_url in product_urls:
-    product_data = scrape_ebay_product(product_url)
-    if product_data:
-        results.append(product_data)
-
-# Save results to CSV
-df = pd.DataFrame(results)
-df.to_csv("ebay_pokemon_psa_data.csv", index=False)
-
-print("\nScraping completed! Data saved to 'ebay_pokemon_psa_data.csv'.")
-print(df.head())
