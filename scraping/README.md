@@ -11,12 +11,7 @@ source venv/bin/activate
 pip install -r scraping/requirements.txt
 ```
 
-2. Configure playwright:
-```
-playwright install
-```
-
-3. Run web scraping script:
+2. Run web scraping script:
 ```
 python scraping/scraper.py
 ```
