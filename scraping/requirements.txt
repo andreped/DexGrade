@@ -2,3 +2,5 @@ beautifulsoup4
 playwright
 pandas
 requests
+tqdm
+Pillow
