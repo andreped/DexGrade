@@ -46,4 +46,4 @@ app.*.map.json
 
 # Python stuff
 *venv/
-*ebay_pokemon_psa/
+*psa_dataset/
